@@ -11,14 +11,20 @@ class DygodSpider(scrapy.Spider):
     
     #一级列表解析
 	def parse(self,response):
-		# menu_list = ["/html/gndy/dyzz/index.html","/html/gndy/china/index.html","/html/gndy/rihan/index.html","/html/gndy/oumei/index.html"]
-		menu_list = ["/html/gndy/dyzz/index.html"]
+		menu_list = ["/html/gndy/dyzz/index.html","/html/gndy/china/index.html","/html/gndy/rihan/index.html","/html/gndy/oumei/index.html"]
 		for url in menu_list:
 			yield scrapy.Request(self.start_urls[0]+url,callback=self.parse_list)
 		# for sel in response.css('#menu .contain li a'):
 		# 	if (sel.xpath('.//text()').extract_first()) not in exlist:
 		# 		menu_url = self.start_urls[0]+sel.xpath('.//@href').extract_first()
 		# 		yield scrapy.Request(menu_url,callback=self.parse_list)
+	
+	#分页列表解析
+	def parse_page(self,response):
+		for page in response.css('.co_content8 div[class="x"] select option'):
+			full_url = self.start_urls[0] + page.xpath('.//@value').extract_first()
+			yield scrapy.Request(full_url,callback=self.parse_list)
+
 	#二级列表解析	
 	def parse_list(self,response):
 		for sel in response.css('.co_content8 ul table a[title]'):
@@ -26,8 +32,7 @@ class DygodSpider(scrapy.Spider):
 			request = scrapy.Request(full_url,callback=self.parse_detail)
 			request.meta['scrapy_url'] = full_url
 			yield request
-		for page in response.css('.co_content8 div[class="x"] select option'):
-			print page.xpath('.//@value').extract_first()	
+
 	#电影详情解析
 	def parse_detail(self,response):
 		obj = ScrapylessItem()
